@@ -5,33 +5,32 @@ namespace KCC
 {
     public class KCCCollider
     {
+        public readonly GameObject GameObject;
+        public readonly CapsuleCollider Collider;
+        public readonly Transform Transform;
+        
         public bool IsSpawned;
-        public GameObject GameObject;
-        public Transform Transform;
-        public CapsuleCollider Collider;
-        public bool IsTrigger;
         public float Radius;
         public float Height;
-        public float Extent = 0.035f;
+        public float Extent;
         public int Layer;
 
-        public void InitCollider(KinematicController kcc)
+        public KCCCollider(KCCSettings settings, GameObject colliderObj, Transform parentTransform, CapsuleCollider collider)
         {
-            GameObject = new GameObject("Collider");
+            GameObject = colliderObj;
             //SetLayer
-            Transform = GameObject.transform;
-            Transform.SetParent(kcc.Transform, false);
+            Transform = colliderObj.transform;
+            Transform.SetParent(parentTransform, false);
             Transform.localPosition = Vector3.zero; 
             Transform.localRotation = Quaternion.identity;
             Transform.localScale = Vector3.one;
 
-            Radius = 0.5f;
-            Height = 2f;
-            Extent = 0.035f;
+            Radius = settings.Radius;
+            Height = settings.Height;
+            Extent = settings.Extent;
 
-            Collider = GameObject.AddComponent<CapsuleCollider>();
+            Collider = collider;
             Collider.direction = 1;
-            Collider.isTrigger = IsTrigger;
             Collider.radius = Radius;
             Collider.height = Height;
             Collider.center = new Vector3(0.0f, Height * 0.5f, 0.0f);

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace KCC
 {
-    public class KCCResolver
+    public class KCCResolver : ICollisionResolver
     {
 	    public int Size => _size;
 	    public int Iterations => _iterations;
@@ -31,6 +31,24 @@ namespace KCC
             _minCorrection    = default;
             _maxCorrection    = default;
             _targetCorrection = default;
+        }
+
+        public Vector3 ResolveCorrection()
+        {
+	        switch (Size)
+	        {
+		        case 1:
+			        return GetCorrection(0, out Vector3 direction);
+		        case 2:
+		        {
+			        GetCorrection(0, out Vector3 direction0);
+			        GetCorrection(1, out Vector3 direction1);
+			        return Vector3.Dot(direction0, direction1) >= 0.0f ? CalculateMinMax() : CalculateBinary();
+		        }
+		        case > 2:
+			        return CalculateGradientDescent(12, 0.0001f);
+	        }
+	        return Vector3.zero;
         }
 
         public void AddCorrection(Vector3 direction, float distance)

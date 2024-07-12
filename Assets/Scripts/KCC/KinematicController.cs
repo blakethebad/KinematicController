@@ -21,6 +21,7 @@ namespace KCC
         private Rigidbody _rigidbody;
         private KCCCollider _collider;
         private KCCData _currentData;
+        private ICollisionResolver _collisionResolver;
 
         private Dictionary<CollisionType, ICollisionStep> _collisionSteps;
         private Dictionary<MovementType, ICalculationStep> _movementSteps;
@@ -34,12 +35,15 @@ namespace KCC
             _rigidbody = GetComponent<Rigidbody>();
             _rigidbody.isKinematic = true;
             _currentData = new KCCData(Settings);
-            _collider = new KCCCollider();
-            _collider.InitCollider(this);
+            _collisionResolver = new KCCResolver();
+
+            GameObject colliderObj = new GameObject("Collider");
+            _collider = new KCCCollider(_settings, colliderObj, transform, 
+                colliderObj.AddComponent<CapsuleCollider>());
             
             _collisionSteps = new Dictionary<CollisionType, ICollisionStep>()
             {
-                { CollisionType.OverlapCollision , new OverlapCollisionStep()},
+                { CollisionType.OverlapCollision , new OverlapCollisionStep(_collisionResolver)},
             };
 
             _movementSteps = new Dictionary<MovementType, ICalculationStep>()
@@ -57,7 +61,7 @@ namespace KCC
 
         public void Move(Vector3 inputDirection) => Data.InputDirection = inputDirection;
 
-        public void Rotate(float pitch, float yaw) => Data.AddLookRotation(pitch, yaw);
+        public void Rotate(float pitch, float yaw) => Data.AddLookRotation(pitch * _settings.Sensitivity.x , yaw * _settings.Sensitivity.y);
 
         public void Jump(Vector3 impulse) => Data.JumpImpulse += impulse;
 

@@ -5,22 +5,24 @@ namespace KCC
 {
     public class OverlapCollisionStep : ICollisionStep
     {
+        private readonly ICollisionResolver _resolver;
+        
         private Collider[] _hits = new Collider[10];
-        private KCCResolver _resolver = new KCCResolver();
-
         private int _hitCount = default;
-        private float _averageGroundDot = default;
         private float _maxGroundDot = default;
         private Vector3 _maxGroundNormal = default;
         private Vector3 _averageGroundNormal = default;
-
         private float _minGroundDot;
+
+        public OverlapCollisionStep(ICollisionResolver resolver)
+        {
+            _resolver = resolver;
+        }
 
         public void Execute(KinematicController kcc, KCCData data)
         {
             _minGroundDot = Mathf.Cos(Mathf.Clamp(kcc.Settings.MaxGroundAngle, 0.0f, 90.0f) * Mathf.Deg2Rad);
             _maxGroundDot = default;
-            _averageGroundDot = default;
             _maxGroundNormal = default;
             _averageGroundNormal = default; 
             data.ResetCollisionData();
@@ -58,30 +60,12 @@ namespace KCC
                 _resolver.AddCorrection(direction, distance);
             }
 
-            Vector3 correction = ResolveCorrection();
+            Vector3 correction = _resolver.ResolveCorrection();
             targetPosition += correction;
 
             RecalculateGround(kcc, data, targetPosition);
 
             data.TargetPosition = targetPosition;
-        }
-        
-        private Vector3 ResolveCorrection()
-        {
-            switch (_resolver.Size)
-            {
-                case 1:
-                    return _resolver.GetCorrection(0, out Vector3 direction);
-                case 2:
-                {
-                    _resolver.GetCorrection(0, out Vector3 direction0);
-                    _resolver.GetCorrection(1, out Vector3 direction1);
-                    return Vector3.Dot(direction0, direction1) >= 0.0f ? _resolver.CalculateMinMax() : _resolver.CalculateBinary();
-                }
-                case > 2:
-                    return _resolver.CalculateGradientDescent(12, 0.0001f);
-            }
-            return Vector3.zero;
         }
 
         private void RecalculateGround(KinematicController kcc, KCCData data, Vector3 targetPos)
